@@ -1,19 +1,18 @@
-import path from "path";
-
 import express from "express";
+import path from "path";
+import dotenv from "dotenv-defaults";
 import cors from "cors";
+import db from "./src/db";
+db.connect();
+import routes from "./src/routes";
+
+dotenv.config();
 
 const app = express();
-// init middleware
-if (process.env.NODE_ENV === "development") {
-  app.use(cors());
-}
-// define routes
-app.get("/api", (req, res) => {
-  // send the request back to the client
-  console.log("GET /api");
-  res.send({ message: "Hello from the server!" }).status(200);
-});
+app.use(cors());
+
+app.use(express.json());
+app.use("/api", routes);
 
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.resolve();

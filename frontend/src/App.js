@@ -1,25 +1,30 @@
-import Stack from "@mui/material/Stack";
+import Header from "./Containers/Header";
+import Body from "./Containers/Body";
+import styled from "styled-components";
+import Paper from "@material-ui/core/Paper";
 
-import logo from './logo.svg';
-import ClientCounter from "./components/ClientCounter";
-import ServerMessage from "./components/ServerMessage";
+const Wrapper = styled.div`
+  margin: auto;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+const StyledPaper = styled(Paper)`
+  padding: 2em;
+`;
 
 function App() {
   return (
-    <Stack
-      sx={{ width: "100%" }}
-      spacing={2}
-      direction="column"
-      alignItems="center"
-    >
-      <img
-        src={logo}
-        alt="logo"
-        style={{ width: "100px", height: "100px" }}
-      /> 
-      <ClientCounter />
-      <ServerMessage />
-    </Stack>
+    <Wrapper>
+      <StyledPaper elevation={3}>
+        <Header />
+        <Body />
+      </StyledPaper>
+    </Wrapper>
   );
 }
 
