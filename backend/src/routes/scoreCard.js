@@ -1,76 +1,85 @@
-import { response, Router } from "express";
+import { Router } from "express";
 import ScoreCard from "../models/ScoreCard";
 const router = Router();
-router.delete("/cards", async (req, res) => {
-    try {
-        await ScoreCard.deleteMany({});
-        res.json({ message: "Database cleared" })
-    } catch (e) {
-        res.send("Database deletion failed");
-    };
-});
-router.post("/card", async (req, res) => {
-    let name = req.body.name
-    let subject = req.body.subject
-    let score = req.body.score
-    const existing = await ScoreCard.findOne({ name, subject });
 
-    if (existing) {
-        try {
-            existing.score = score;
-            await existing.save()
-            res.send({ message: "Updating (" + name + ", " + subject + ", " + score + ")", card: true })
-        } catch (e) {
-            // throw new Error("ScoreCard creation error: " + e);
-            res.send({ message: "ScoreCard updating error", card: false })
-        }
+const deleteDB = async () => {
+  try {
+    await ScoreCard.deleteMany({});
+    console.log("Database deleted");
+    return "Database cleared";
+  } catch (e) {
+    throw new Error("Database deletion failed");
+  }
+};
+
+const saveUser = async (name, subject, score) => {
+  let msg;
+  const existing = await ScoreCard.findOne({
+    name,
+    subject,
+  });
+
+  if (existing) {
+    msg = `Updating (${name}, ${subject}, ${score})`;
+    try {
+      existing.score = score;
+      existing.save();
+      console.log("Updated user", name);
+      return msg;
+    } catch (e) {
+      throw new Error("User creation error: " + e);
     }
-    else {
-        try {
-            const newScoreCard = new ScoreCard({ name, subject, score });
-            await newScoreCard.save();
-            res.send({ message: "Adding (" + name + ", " + subject + ", " + score + ")", card: true })
-        } catch (e) {
-            res.send({ message: "ScoreCard adding error", card: false })
-        }
+  } else {
+    msg = `Adding (${name}, ${subject}, ${score})`;
+    try {
+      const newUser = new ScoreCard({ name, subject, score });
+      console.log("Created user", newUser);
+      await newUser.save();
+      return msg;
+    } catch (e) {
+      throw new Error("User creation error: " + e);
     }
+  }
+};
+
+router.delete("/cards", async (_, res) => {
+  const msg = await deleteDB();
+  res.send({ message: msg });
+});
+
+router.post("/card", async (req, res) => {
+  const name = req.body.name;
+  const subject = req.body.subject;
+  const score = req.body.score;
+
+  try {
+    const msg = await saveUser(name, subject, score);
+    res.json({ message: msg, card: true });
+  } catch (e) {
+    res.json({ message: e, card: false });
+  }
 });
 router.get("/cards", async (req, res) => {
-    let type = req.query.type;
-    let queryString = req.query.queryString;
-    let returnMessages = []
-    try {
-        if (type == "name") {
-            const results = await ScoreCard.find({ name: queryString }).exec();
-            if (!results.length) {
-                res.send({ message: "Name (" + queryString + ") not found!" })
-            }
-            else {
-                results.map(r => {
-                    returnMessages.push("Found card with name: (" + r.name + ", " + r.subject + ", " + r.score + ")")
-                })
-                res.send({ messages: returnMessages })
+  const type = req.query.type;
+  const str = req.query.queryString;
+  let existing = false;
 
-            }
-        }
-        if (type == "subject") {
-            const results = await ScoreCard.find({ subject: queryString }).exec();
-            if (!results.length) {
-                res.send({ message: "Subject (" + queryString + ") not found!" })
-            }
-            else {
-                results.map(r => {
-                    returnMessages.push("Found card with subject: (" + r.name + ", " + r.subject + ", " + r.score + ")")
-                })
-                res.send({ messages: returnMessages })
-            }
-        }
-    }
-    catch (e) {
-        // console.log("here")
-        res.send({ message: "ScoreCard updating error" })
-    }
+  if (type === "name") {
+    existing = await ScoreCard.find({ name: str }).exec();
+  } else {
+    existing = await ScoreCard.find({ subject: str }).exec();
+  }
+
+  if (existing.length === 0) {
+    res.send({ message: `“QueryType ${str} not found!` });
+  } else {
+    const out = existing.map((q) => [
+      `Found card with name: (${q.name}, ${q.subject}, ${q.score})`,
+    ]);
+    console.log(out);
+    res.send({
+      messages: out,
+    });
+  }
 });
-
-
 export default router;

@@ -39,8 +39,13 @@ const ContentPaper = styled(Paper)`
 const Body = () => {
   const classes = useStyles();
 
-  const { messages, addCardMessage, addRegularMessage, addErrorMessage } =
-    useScoreCard();
+  const {
+    messages,
+    clearMessage,
+    addCardMessage,
+    addRegularMessage,
+    addErrorMessage,
+  } = useScoreCard();
 
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
@@ -57,13 +62,15 @@ const Body = () => {
     const {
       data: { message, card },
     } = await axios.post("/card", {
-      name,
-      subject,
-      score,
+      name: name,
+      subject: subject,
+      score: score,
     });
 
     if (!card) addErrorMessage(message);
-    else addCardMessage(message);
+    else {
+      addCardMessage(message);
+    }
   };
 
   const handleQuery = async () => {
@@ -75,6 +82,7 @@ const Body = () => {
         queryString,
       },
     });
+
     if (!messages) addErrorMessage(message);
     else addRegularMessage(...messages);
   };
@@ -151,6 +159,15 @@ const Body = () => {
         </Button>
       </Row>
       <ContentPaper variant="outlined">
+        {clearMessage && (
+          <Typography
+            variant="body2"
+            key={clearMessage}
+            style={{ color: clearMessage.color }}
+          >
+            {clearMessage.message}
+          </Typography>
+        )}
         {messages.map((m, i) => (
           <Typography variant="body2" key={m + i} style={{ color: m.color }}>
             {m.message}
